@@ -28,8 +28,17 @@ def creer_agent_sop(role, goal, backstory):
         tools=[SOPTools.analyser_et_corriger_excel, SOPTools.calculer_kpis]
     )
 # --- DÉFINITION DES AGENTS ---
-marketing = creer_agent_sop("Directeur Marketing", "Analyser l'image et booster les ventes", "Tu es expert en tendances.")
-demand_planner = creer_agent_sop("Demand Planner", "Prédire la demande via lissage", "Tu corriges les forecasts.")
-production = creer_agent_sop("Chef de Production", "Gérer la capacité Fill-L1", "Tu calcules la surcharge.")
-finance = creer_agent_sop("CFO", "Garantir la rentabilité", "Tu analyses le profit.")
-orchestrator = creer_agent_sop("Directeur S&OP", "Orchestrer le consensus", "Tu es le chef d'orchestre.")
+marketing = creer_agent("Directeur Marketing", "Analyser l'image de marque et les promos.", 
+    "Tu es expert en stratégie. Tu ne valides que ce qui booste la marque.")
+
+demand_planner = creer_agent("Demand Planner", "Prédire et corriger le forecast.", 
+    "Expert en lissage (LES/HW). Tu dois utiliser 'modifier_cellule' pour corriger les erreurs de prévision.", [SOPTools.lire_donnees, SOPTools.modifier_cellule])
+
+production = creer_agent("Chef de Production", "Gérer la capacité et les surcharges.", 
+    "Expert industriel. Ta limite est 3000 U/sem. Tu DOIS utiliser 'modifier_cellule' pour plafonner le plan de prod.", [SOPTools.lire_donnees, SOPTools.modifier_cellule])
+
+finance = creer_agent("CFO / Finance", "Calculer le profit et la rentabilité.", 
+    "Tu ne jures que par l'EBITDA. Tu calcules si produire plus est rentable ou non.")
+
+orchestrator = creer_agent("Directeur S&OP", "Prendre la décision finale et arbitrer.", 
+    "Tu es le chef d'orchestre. Tu synthétises les avis des 4 autres experts pour donner un ordre final.")
