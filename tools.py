@@ -5,19 +5,19 @@ from crewai.tools import tool
 class SOPTools:
     @tool("lire_donnees")
     def lire_donnees(chemin_fichier: str):
-        """Lit un fichier Excel et retourne le contenu sous forme de texte pour analyse."""
+        """Lit un fichier Excel et retourne les 15 premières lignes pour analyse."""
         if not os.path.exists(chemin_fichier):
-            return f"Erreur : Le fichier {chemin_fichier} est introuvable."
+            return "Erreur : Le fichier est introuvable."
         df = pd.read_excel(chemin_fichier)
-        return df.to_string()
+        return df.head(15).to_string()
 
     @tool("modifier_cellule")
     def modifier_cellule(chemin_fichier: str, ligne: int, colonne: str, valeur: float):
-        """Modifie une cellule précise dans l'Excel. ligne: index (0,1..), colonne: nom (ex: 'W40 Y23')."""
+        """Modifie une cellule précise. ligne: index (0,1,2..), colonne: nom (ex: 'W40 Y23')."""
         try:
             df = pd.read_excel(chemin_fichier)
             df.at[ligne, colonne] = valeur
             df.to_excel(chemin_fichier, index=False)
-            return f"✅ Modification réussie dans {chemin_fichier} à la ligne {ligne}."
+            return f"✅ Modification réussie : {colonne} à la ligne {ligne} est maintenant à {valeur}."
         except Exception as e:
-            return f"❌ Erreur de modification : {str(e)}"
+            return f"❌ Erreur : {str(e)}"
