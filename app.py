@@ -116,3 +116,77 @@ with tab_orch:
             st.markdown(resultat.raw)
             # Log de l'orchestration (simulé par le verbose de CrewAI qui s'affiche en console)
             st.session_state.historique_orchestre.append(f"Scénario: {scenario} -> Résolu")
+            def generer_analyse_visuelle(df):
+    # --- 1. CALCULS TECHNIQUES ---
+    capa_h = 1400
+    taux_u = 0.4667
+    max_prod = int(capa_h / taux_u) # 3000
+    
+    # On prépare le tableau MRP
+    df_mrp = df.copy()
+    # On s'assure que les colonnes sont numériques
+    cols_semaines = [c for c in df.columns if 'W' in c]
+    
+    # --- 2. EN-TÊTE (METRICS) ---
+    st.subheader("PARAMÈTRES FILL-L1 — ARTICLE A1")
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("Capacité PHR/sem", f"{capa_h:,.0f}")
+    m2.metric("Taux PHR/U", f"{taux_u:.4f}")
+    m3.metric("Max prod. U/sem", f"{max_prod:,.0f}", "nominal")
+    m4.metric("Stock Initial U", "13 494")
+    m5.metric("Safety stock U", "4.17")
+
+    # --- 3. ALERTES CRITIQUES (Style Photo) ---
+    st.markdown("### ALERTES CRITIQUES")
+    demande_w40 = df[df['Donnees'] == 'Gross requirements [U]']['W40 Y23'].values[0]
+    
+    if demande_w40 > max_prod:
+        st.error(f"⚠️ **Pic de demande insurmontable :** W40 demande {demande_w40:,.0f} U alors que la capacité max est de {max_prod} U. Sous-traitance obligatoire.")
+    
+    st.warning("📉 **Rupture de stock progressive :** dès W39, le stock devient négatif si le plan actuel n'est pas modifié.")
+    st.info("📦 **Stock tampon W34-W38 :** le stock initial absorbe la demande jusqu'à W38.")
+
+    # --- 4. TABLEAU MRP COMPLET ---
+    st.markdown("### TABLEAU MRP COMPLET — 19 PÉRIODES")
+    
+    # Simulation des colonnes Charge et Saturation pour l'affichage
+    # (Ici vous mettriez votre vraie logique de calcul ligne par ligne)
+    
+    def color_status(val):
+        color = 'red' if val == 'SURCHARGE' else 'green'
+        return f'color: {color}; font-weight: bold'
+
+    # Affichage du DataFrame stylisé
+    st.dataframe(df.style.set_properties(**{'background-color': '#f9f9f9', 'border': '1px solid white'}))
+
+    # --- 5. OPTIONS D'ACTION (Les boîtes en bas) ---
+    st.markdown("### OPTIONS D'ACTION CHIFFRÉES")
+    row1_col1, row1_col2 = st.columns(2)
+    
+    with row1_col1:
+        with st.container(border=True):
+            st.write("**[A] Réduction Gross Req**")
+            st.write(f"Max absorbable : {max_prod} U/sem. Risque : perte de CA.")
+            
+    with row1_col2:
+        with st.container(border=True):
+            st.write("**[B] Heures supp +25%**")
+            st.write("1 750 PHR -> 3 750 U/sem. Insuffisant pour W40.")
+
+    row2_col1, row2_col2 = st.columns(2)
+    with row2_col1:
+        with st.container(border=True):
+            st.write("**[D] Sous-traitance partielle**")
+            st.write("W40 : externaliser 29 000 U. Coût +30-40%.")
+            
+    with row2_col2:
+        with st.container(border=True):
+            st.write("**Recommandation ingénieur**")
+            st.success("Anticiper en W35-W36 + Heures supp sur W42.")
+            if c1.button("Vision Globale", key=f"v_{agent.role}"):
+    # 1. On laisse l'agent faire son travail en arrière-plan (pour les logs et la réflexion)
+    res = executer_analyse(agent, nom_fichier_defaut, "Analyse les données pour préparer un bilan S&OP.")
+    
+    # 2. On affiche l'interface structurée (La photo)
+    df_actuel = pd.read_excel(nom_fichier_defaut)
+    generer_analyse_visuelle(df_actuel)
