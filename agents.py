@@ -1,16 +1,18 @@
-from crewai import Agent, LLM
-from tools import SOPTools
+import streamlit as st
 import os
+from crewai import Agent, LLM
 
-# 1. Configuration de la clé API
-os.environ["GROQ_API_KEY"] = "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"
+# --- GESTION DE LA CLÉ API ---
+# On essaie de récupérer la clé dans les secrets de Streamlit (pour le Cloud)
+# Si elle n'existe pas, on regarde dans l'environnement
+api_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY", ""))
 
-# 2. Initialisation du LLM avec limitation de vitesse pour éviter les "Rate Limits"
-cerveau = LLM(
-    model="groq/llama-3.1-8b-instant",
-    api_key=os.environ["GROQ_API_KEY"]
-)
-
+# On n'initialise le LLM QUE si on a une clé
+if api_key:
+    os.environ["GROQ_API_KEY"] = api_key
+    cerveau = LLM(model="groq/llama-3.1-8b-instant", api_key=api_key)
+else:
+    cerveau = None # On gérera l'erreur dans l'interface
 def creer_agent_sop(role, goal, backstory):
     return Agent(
         role=role, 
