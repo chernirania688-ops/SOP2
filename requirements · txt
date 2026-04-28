@@ -1,7 +1,6 @@
 streamlit
 pandas
 plotly
+crewai
 openpyxl
-requests
-numpy
-scipy
+litellm
