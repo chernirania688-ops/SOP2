@@ -22,12 +22,11 @@ def creer_agent_sop(role, goal, backstory):
         backstory=backstory,
         llm=cerveau, 
         verbose=True, 
-        allow_delegation=True,
-        max_rpm=2, 
-        # On appelle les outils décorés par @tool
+        allow_delegation=False, # Désactivez la délégation pour économiser des jetons
+        max_rpm=1,             # <--- FORCE 1 requête par minute maximum
+        max_iter=3,            # <--- LIMITE à 3 réflexions maximum par tâche
         tools=[SOPTools.analyser_et_corriger_excel, SOPTools.calculer_kpis]
     )
-
 # --- DÉFINITION DES AGENTS ---
 marketing = creer_agent_sop("Directeur Marketing", "Analyser l'image et booster les ventes", "Tu es expert en tendances.")
 demand_planner = creer_agent_sop("Demand Planner", "Prédire la demande via lissage", "Tu corriges les forecasts.")
