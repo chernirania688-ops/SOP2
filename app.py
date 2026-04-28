@@ -50,12 +50,20 @@ def generer_onglet(nom_label, agent_obj, file_path):
             if c1.button("📉 Vision Globale", key=f"v_{nom_label}"):
                 rendu_visuel_industriel(df, nom_label)
             
-            if c2.button("🔍 Analyse IA", key=f"a_{nom_label}"):
-                with st.spinner("L'expert analyse..."):
-                    t = Task(description=f"Analyse le fichier {file_path} en détail.", agent=agent_obj, expected_output="Rapport détaillé.")
-                    res = Crew(agents=[agent_obj], tasks=[t]).kickoff()
-                    st.session_state.logs[nom_label] = res.raw
-            
+          if c2.button("🔍 Analyse IA", key=f"a_{nom_label}"):
+    with st.spinner("L'expert analyse les points clés..."):
+        # On ne prend que les colonnes W40 et les 5 premières lignes
+        # pour ne pas dépasser le quota de l'API
+        resume_data = df.head(10).to_string() 
+        
+        t = Task(
+            description=f"Analyse cet extrait de données S&OP : {resume_data}. Donne 3 points critiques maximum.", 
+            agent=agent_obj, 
+            expected_output="3 lignes de conclusion."
+        )
+        res = Crew(agents=[agent_obj], tasks=[t]).kickoff()
+        st.session_state.logs[nom_label] = res.raw
+        st.rerun()
             if c3.button("📊 Dashboard", key=f"d_{nom_label}"):
                 df_n = df.select_dtypes(include=['number'])
                 if not df_n.empty:
