@@ -31,10 +31,15 @@ demand_planner = creer_agent(
     tools_list=[SOPTools.lire_donnees, SOPTools.modifier_cellule]
 )
 
+# Dans agents.py
 production = creer_agent(
     "Chef de Production", 
-    "Gérer la capacité.", 
-    "Expert industriel. Tu DOIS utiliser 'lire_donnees' et 'modifier_cellule'.",
+    "Corriger les surcharges dans l'Excel", 
+    """Tu es un robot de planification. Ta seule mission est de vérifier que 
+    le plan de production ne dépasse JAMAIS 3000. 
+    Si tu vois un chiffre > 3000 ou une demande > 3000, tu UTILISES 
+    IMMÉDIATEMENT l'outil 'modifier_cellule'. 
+    Tu ne donnes ta réponse finale qu'APRÈS avoir utilisé l'outil.""",
     tools_list=[SOPTools.lire_donnees, SOPTools.modifier_cellule]
 )
 
