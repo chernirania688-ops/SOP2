@@ -12,9 +12,15 @@ cerveau = LLM(model="groq/llama-3.1-8b-instant", api_key=api_key)
 # 3. Fonction de création
 def creer_agent(role, goal, backstory, tools_list=[]):
     return Agent(
-        role=role, goal=goal, backstory=backstory,
-        llm=cerveau, verbose=True, allow_delegation=True,
-        max_rpm=1, tools=tools_list, max_iter=5
+        role=role, 
+        goal=goal, 
+        backstory=backstory,
+        llm=cerveau, 
+        verbose=True, 
+        allow_delegation=False, # Désactiver pour économiser des jetons
+        max_rpm=1,              # <--- IMPORTANT : Maximum 1 requête par minute
+        max_iter=2,             # <--- IMPORTANT : Maximum 2 étapes de réflexion
+        tools=tools_list
     )
 
 # 4. Définition des agents (NOMS SYNCHRONISÉS AVEC TOOLS.PY)
