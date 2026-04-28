@@ -59,10 +59,34 @@ def generer_onglet(nom_label, agent_obj, file_path):
                 if not df_n.empty:
                     st.plotly_chart(px.line(df_n.T, title=f"Graphique {nom_label}"), use_container_width=True)
             
-            if c4.button("⚡ Corriger", key=f"c_{nom_label}"):
-                t = Task(description=f"Utilise 'modifier_cellule' pour plafonner la production à 3000 dans {file_path}", agent=agent_obj, expected_output="Confirmation.")
-                Crew(agents=[agent_obj], tasks=[t]).kickoff()
-                st.success("Correction effectuée dans l'Excel !")
+           if b4.button("⚡ Corriger", key=f"c_{nom_label}"):
+    with st.spinner("L'IA recalcule et modifie le fichier..."):
+        # On donne un ordre ultra-direct avec les chiffres
+        ordre_correction = f"""
+        INTERDICTION de dire que tout va bien. 
+        1. Calcule la capacité max : 1400 / 0.4667 = 3000 unités.
+        2. Lis le fichier {file_path}.
+        3. Pour TOUTES les semaines (W34 à W52), si 'Gross requirements [U]' est plus grand que 3000 :
+           - Tu DOIS appeler l'outil 'modifier_cellule'.
+           - Tu mets la valeur 3000 dans la ligne 'Minimum production plan [U]' (Ligne 7) pour cette semaine.
+        4. Termine en listant les semaines que tu as réellement modifiées.
+        """
+        
+        t_corriger = Task(
+            description=ordre_correction, 
+            agent=agent_obj, 
+            expected_output="Rapport des modifications réelles effectuées sur le disque."
+        )
+        
+        crew = Crew(agents=[agent_obj], tasks=[t_corriger], verbose=True)
+        res = crew.kickoff()
+        
+        st.success("Correction terminée !")
+        st.info(res.raw)
+        
+        # --- TRÈS IMPORTANT : ON FORCE STREAMLIT À RELIRE LE FICHIER ---
+        st.cache_data.clear() # On vide le cache
+        st.rerun() # On relance l'app pour afficher les nouveaux chiffres dans le tableau
 
             if st.session_state.logs[nom_label]:
                 st.info(st.session_state.logs[nom_label])
