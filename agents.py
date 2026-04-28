@@ -1,18 +1,20 @@
-import streamlit as st
 import os
+import streamlit as st
 from crewai import Agent, LLM
+from tools import SOPTools  # <--- CETTE LIGNE EST INDISPENSABLE
 
-# --- GESTION DE LA CLÉ API ---
-# On essaie de récupérer la clé dans les secrets de Streamlit (pour le Cloud)
-# Si elle n'existe pas, on regarde dans l'environnement
-api_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY", ""))
+# Configuration de la clé API (via les secrets Streamlit)
+api_key = st.secrets.get("GROQ_API_KEY", "")
 
-# On n'initialise le LLM QUE si on a une clé
-if api_key:
-    os.environ["GROQ_API_KEY"] = api_key
-    cerveau = LLM(model="groq/llama-3.1-8b-instant", api_key=api_key)
-else:
-    cerveau = None # On gérera l'erreur dans l'interface
+if not api_key:
+    st.error("La clé API Groq est manquante dans les Secrets Streamlit.")
+
+# Initialisation du cerveau
+cerveau = LLM(
+    model="groq/llama-3.1-8b-instant",
+    api_key=api_key
+)
+
 def creer_agent_sop(role, goal, backstory):
     return Agent(
         role=role, 
@@ -21,19 +23,14 @@ def creer_agent_sop(role, goal, backstory):
         llm=cerveau, 
         verbose=True, 
         allow_delegation=True,
-        max_rpm=2, # <--- AJOUTÉ : limite pour ne pas saturer ton compte gratuit Groq
+        max_rpm=2, 
+        # On appelle les outils décorés par @tool
         tools=[SOPTools.analyser_et_corriger_excel, SOPTools.calculer_kpis]
     )
 
-# --- DÉFINITION DES AGENTS (Noms synchronisés avec app.py) ---
-
-marketing = creer_agent_sop("Directeur Marketing", "Analyser l'image et booster les ventes", "Tu es expert en tendances et promotions.")
-
-# Changement du nom ici : 'demande' devient 'demand_planner'
-demand_planner = creer_agent_sop("Demand Planner", "Prédire la demande via lissage", "Tu lis l'historique et tu corriges les forecasts selon l'historique.")
-
-production = creer_agent_sop("Chef de Production", "Gérer la capacité Fill-L1", "Tu calcules la surcharge et lisses la production.")
-
-finance = creer_agent_sop("CFO", "Garantir la rentabilité", "Tu analyses si les modifications sont profitables.")
-
-orchestrator = creer_agent_sop("Directeur S&OP", "Orchestrer le consensus final", "Tu es le chef d'orchestre qui appelle les autres agents.")
+# --- DÉFINITION DES AGENTS ---
+marketing = creer_agent_sop("Directeur Marketing", "Analyser l'image et booster les ventes", "Tu es expert en tendances.")
+demand_planner = creer_agent_sop("Demand Planner", "Prédire la demande via lissage", "Tu corriges les forecasts.")
+production = creer_agent_sop("Chef de Production", "Gérer la capacité Fill-L1", "Tu calcules la surcharge.")
+finance = creer_agent_sop("CFO", "Garantir la rentabilité", "Tu analyses le profit.")
+orchestrator = creer_agent_sop("Directeur S&OP", "Orchestrer le consensus", "Tu es le chef d'orchestre.")
