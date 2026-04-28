@@ -3,25 +3,21 @@ import os
 from crewai.tools import tool
 
 class SOPTools:
-    @tool("analyser_et_corriger_excel")
-    def analyser_et_corriger_excel(chemin_fichier: str, instruction: str):
-        """Lit un fichier, applique une logique de correction (ex: plafonner la prod) et sauvegarde."""
+    @tool("lire_donnees")
+    def lire_donnees(chemin_fichier: str):
+        """Lit un fichier Excel et retourne le contenu sous forme de texte pour analyse."""
+        if not os.path.exists(chemin_fichier):
+            return f"Erreur : Le fichier {chemin_fichier} est introuvable."
+        df = pd.read_excel(chemin_fichier)
+        return df.to_string()
+
+    @tool("modifier_cellule")
+    def modifier_cellule(chemin_fichier: str, ligne: int, colonne: str, valeur: float):
+        """Modifie une cellule précise dans l'Excel. ligne: index (0,1..), colonne: nom (ex: 'W40 Y23')."""
         try:
             df = pd.read_excel(chemin_fichier)
-            # Ici on peut ajouter une logique spécifique ou laisser le LLM proposer via un script
-            # Pour l'exemple, on simule une correction de capacité
-            if "plafonner" in instruction.lower():
-                if "Capacity" in df.columns:
-                    df["Production_Plan"] = df["Capacity"] # Exemple d'action
-            
+            df.at[ligne, colonne] = valeur
             df.to_excel(chemin_fichier, index=False)
-            return f"Action réussie sur {chemin_fichier} : {instruction}"
+            return f"✅ Modification réussie dans {chemin_fichier} à la ligne {ligne}."
         except Exception as e:
-            return f"Erreur : {str(e)}"
-
-    @tool("calculer_kpis")
-    def calculer_kpis(chemin_fichier: str):
-        """Calcule les indicateurs clés (Saturation, Marge) à partir d'un fichier."""
-        df = pd.read_excel(chemin_fichier)
-        summary = df.describe().to_string()
-        return f"Résumé statistique du fichier :\n{summary}"
+            return f"❌ Erreur de modification : {str(e)}"
